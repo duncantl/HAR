@@ -3,7 +3,32 @@ function(file, d = fromJSON(file))
 {
     e = d$log$entries
     els = lapply(e, mkEntryDF)
-    do.call(rbind, els)
+    fix(do.call(rbind, els))
+}
+
+fix =
+function(x)    
+{
+    df = as.data.frame(x)
+
+    num = c("time", "blocked", "dns", "connect", "ssl", "send", "wait", 
+            "receive", "bodySize", "headersSize", "status")
+
+    char = c("startedDateTime", "_securityState", "serverIPAddress", "connection", 
+             "pageref", "method", "url", "httpVersion", "statusText", "redirectURL", 
+             "content", "mimeType")
+
+#    df[num] = lapply(df[num], as.numeric)
+    #    df[char] = lapply(df[char], as.character)
+    df[c(num, char)] = lapply(df[c(num, char)], unlist)
+
+#    vl = c(# "requestHeaders", "requestCookies", "queryString",
+#        "postData"
+    #       "responseHeaders", "responseCookies"
+#           )
+    #    df[vl] = lapply(df[vl], unlist, recursive = FALSE)
+    df$postData = unlist(df$postData, recursive = FALSE)
+    df
 }
 
 
@@ -22,42 +47,12 @@ EntryFields = c(startedDateTime = "character", request = "list", response = "lis
 asDF1 =
 function(x)    
 {
-    structure(as.list(x), row.names = 1L, class = "data.frame")
+    #  structure(as.list(x), row.names = 1L, class = "data.frame")
+  structure(x, row.names = 1L, class = "data.frame")    
 }
 
 
-mkEntryDF = mkEntryDF0 = mkEntryDF00 =
-function(x)
-{
-    scalar = c("startedDateTime", "_securityState", "serverIPAddress", "connection", "pageref", "time")
-    tmp = lapply(x[scalar], orNA)
-    names(tmp) = scalar
-
-    #    ans = as.data.frame(tmp)
-    ans = asDF1(tmp)
-
-    # timings
-    if(length(x$timings))
-        ans[names(x$timings)] = asDF1(as.list(x$timings)) # as.data.frame(as.list(x$timings))
-    else
-        ans = cbind(ans, data.frame("blocked" = NA,  "dns" = NA, connect = NA, "ssl" = NA, "send" = NA, "wait" = NA, "receive" = NA))
-    
-    # request, response, cache
-    # For now, ignore cache as I have that turned off.
-
-    r = mkRequest(x$request)
-    ans[names(r)] = r
-
-    r = mkResponse(x$response)
-    ans[names(r)] = r    
-
-    ans
-}
-
-
-
-
-mkEntryDF = mkEntryDF0 =
+mkEntryDF = 
 function(x)
 {
     scalar = c("startedDateTime", "_securityState", "serverIPAddress", "connection", "pageref", "time")
@@ -93,27 +88,6 @@ function(x)
     if(length(x) == 0) NA else x
 
 
-queryString = queryString0 =
-    # convert the list of name value vectors into a single vector with the values
-    # as the elements and the field name as the names() vector.
-function(x)
-{
-
-    # w/o this check for length(x), get warnings of the form
-    # In structure(v[i + 1L], names = v[i]) :
-    #  Calling 'structure(NULL, *)' is deprecated, as NULL cannot have attributes.
-    #  Consider 'structure(list(), *)' instead.
-    if(length(x) == 0)
-        return(character())
-    
-    v =  unlist(x)
-    i = seq(1, by = 2, length = length(x))
-    structure(v[ i + 1L], names = v[i])
-    # Which is faster - structure() or ans = ; names(ans) = ; ans
-    #ans = v[ i + 1L]
-    #names(ans) = v[i]
-    #ans
-}
 
 queryString = 
     # convert the list of name value vectors into a single vector with the values
@@ -136,24 +110,6 @@ function(x)
 
 
 
-# This version is slower than the above.
-queryString.slower = 
-    # convert the list of name value vectors into a single vector with the values
-    # as the elements and the field name as the names() vector.
-function(x)
-{
-
-    # w/o this check for length(x), get warnings of the form
-    # In structure(v[i + 1L], names = v[i]) :
-    #  Calling 'structure(NULL, *)' is deprecated, as NULL cannot have attributes.
-    #  Consider 'structure(list(), *)' instead.
-    if(length(x) == 0)
-        return(character())
-    
-    tmp = matrix(unlist(x), , 2, byrow = TRUE)
-    structure(tmp[,2], names = tmp[,1])
-}
-
 
 
 # This version creates the entire list and then calls asDF1
@@ -165,13 +121,12 @@ function(x)
     s = c("bodySize", "method", "url", "httpVersion", "headersSize")
     ans = lapply(x[s], orNA) 
 
-    ans$requestHeaders = list(queryString(x$headers))
-    ans$requestCookies = list(queryString(x$cookies))
-    ans$queryString = list(queryString(x$queryString))
-    ans$postData = list(queryString(x$postData))
+    ans$requestHeaders = queryString(x$headers)
+    ans$requestCookies = queryString(x$cookies)
+    ans$queryString = queryString(x$queryString)
+    ans$postData = list(x$postData) # had queryString() but the postData is a named list not an unnamed list of name-value pairs.
 
     asDF1(ans)
-#    ans
 }
 
 
@@ -186,8 +141,8 @@ function(x)
     names(ans) = s
     
 
-    ans$responseHeaders = list(queryString(x$headers))
-    ans$responseCookies = list(queryString(x$cookies))
+    ans$responseHeaders = queryString(x$headers)
+    ans$responseCookies = queryString(x$cookies)
     ans$content = orNA(x$content$text)
     ans$mimeType = orNA(x$content$mimeType)
     
