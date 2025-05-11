@@ -12,10 +12,10 @@ function(x)
     df = as.data.frame(x)
 
     num = c("time", "blocked", "dns", "connect", "ssl", "send", "wait", 
-            "receive", "bodySize", "headersSize", "status")
+            "receive", "bodySize", "headersSize", "responseStatus")
 
     char = c("startedDateTime", "_securityState", "serverIPAddress", "connection", 
-             "pageref", "method", "url", "httpVersion", "statusText", "redirectURL", 
+             "pageref", "method", "url", "httpVersion", "responseStatusText", "responseRedirectURL", 
              "content", "mimeType")
 
 #    df[num] = lapply(df[num], as.numeric)
@@ -138,7 +138,7 @@ function(x)
     s = c("status", "statusText", "httpVersion", "redirectURL", "headersSize", "bodySize")
     ans = lapply(x[s], orNA)
     # added this when did not get the same answer as mkResponse0
-    names(ans) = s
+    names(ans) = paste0("response", capitalize(s))
     
 
     ans$responseHeaders = queryString(x$headers)
@@ -148,3 +148,7 @@ function(x)
     
     asDF1(ans)
 }
+
+capitalize =
+function(x)
+    paste0(toupper(substring(x, 1, 1)), substring(x, 2))
