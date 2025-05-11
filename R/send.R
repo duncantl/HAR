@@ -32,9 +32,50 @@ function(req, cookie = character(), postData = character(), curl = getCurlHandle
     if(dropEncoding)
         headers = dropEncoding(headers)
     
-    browser()
-    getURLContent(url = url, cookie = cookie, curl = curl, customrequest = op, httpheader = headers, ...)
+    ans = getURLContent(url = url, binary = TRUE, cookie = cookie, curl = curl, customrequest = op, httpheader = headers, header = TRUE, ...)
+
+    cvtBody(ans, ans$header)
 }
+
+cvtBody =
+function(ans, header = ans$header)    
+{
+    b = ans$body$body #XX
+    enc = header["content-encoding"]
+    b2 = switch(enc,
+                br = brotli::brotli_decompress(b),
+                gzip = Rcompression::gunzip(b),
+                b
+                )
+
+    b2 = cvtContentType(b2, header["content-type"])
+
+    attr(b2, "header") = ans$header
+    b2
+}
+
+cvtContentType =
+function(data, ct)    
+{
+    els = strsplit(ct, ";")[[1]]
+    if(els[1] %in% TextContentTypes)
+        rawToChar(data)
+    else
+        data
+}
+
+TextContentTypes =
+c("text/javascript", "application/json", "application/javascript", 
+  "text/css", "text/plain", "text/html", 
+   "image/svg+xml" 
+  )
+
+# "font/woff2", 
+# "image/x-icon", "image/vnd.microsoft.icon"
+# "font/ttf",
+# "image/png", "image/gif", "image/jpeg", "binary/octet-stream", 
+# "image/webp",
+    
 
 combine =
 function(x, sep = "=", collapse = "&")
