@@ -12,7 +12,8 @@ function(x)
     df = as.data.frame(x)
 
     num = c("time", "blocked", "dns", "connect", "ssl", "send", "wait", 
-            "receive", "bodySize", "headersSize", "responseStatus")
+            "receive", "bodySize", "headersSize", "responseStatus",
+            "responseHttpVersion", "responseHeadersSize", "responseBodySize")
 
     char = c("startedDateTime", "_securityState", "serverIPAddress", "connection", 
              "pageref", "method", "url", "httpVersion", "responseStatusText", "responseRedirectURL", 
