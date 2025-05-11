@@ -37,6 +37,8 @@ function(req, cookie = character(), postData = character(), curl = getCurlHandle
     cvtBody(ans, ans$header)
 }
 
+
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Encoding
 cvtBody =
 function(ans, header = ans$header)    
 {
