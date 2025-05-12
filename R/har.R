@@ -17,7 +17,7 @@ function(x)
 
     char = c("startedDateTime", "_securityState", "serverIPAddress", "connection", 
              "pageref", "method", "url", "httpVersion", "responseStatusText", "responseRedirectURL", 
-             "content", "mimeType")
+             "content", "mimeType", "responseEncoding")
 
 #    df[num] = lapply(df[num], as.numeric)
     #    df[char] = lapply(df[char], as.character)
@@ -146,6 +146,7 @@ function(x)
     ans$responseCookies = queryString(x$cookies)
     ans$content = orNA(x$content$text)
     ans$mimeType = orNA(x$content$mimeType)
+    ans$responseEncoding = orNA(x$content$encoding)    
     
     asDF1(ans)
 }
