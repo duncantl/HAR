@@ -4,6 +4,6 @@ Description: Read HAR files and send HTTP requests described in a HAR.
 Author: Duncan Temple Lang
 Maintainer: Duncan Temple Lang <dtemplelang@ucdavis.edu>
 Version: 0.1-0
-Imports: RSSONIO
+Imports: RJSONIO
 Suggests: RCurl, Rcompression, botli
 License: MIT
