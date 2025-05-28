@@ -3,10 +3,13 @@ function(file, d = fromJSON(file))
 {
     e = d$log$entries
     els = lapply(e, mkEntryDF)
-    fix(do.call(rbind, els))
+    return(fix2(els))
+#    tmp = do.call(rbind, els)
+#    fix(tmp)
 }
 
 fix =
+    # See fix2.R
 function(x)    
 {
     df = as.data.frame(x)
@@ -19,15 +22,8 @@ function(x)
              "pageref", "method", "url", "httpVersion", "responseStatusText", "responseRedirectURL", 
              "content", "mimeType", "responseEncoding")
 
-#    df[num] = lapply(df[num], as.numeric)
-    #    df[char] = lapply(df[char], as.character)
-    df[c(num, char)] = lapply(df[c(num, char)], unlist)
+    df[c(num, char)] = lapply(df[c(num, char)], unlist, recursive = FALSE)
 
-#    vl = c(# "requestHeaders", "requestCookies", "queryString",
-#        "postData"
-    #       "responseHeaders", "responseCookies"
-#           )
-    #    df[vl] = lapply(df[vl], unlist, recursive = FALSE)
     df$postData = unlist(df$postData, recursive = FALSE)
     df
 }
